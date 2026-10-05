@@ -8,30 +8,22 @@ on:
 jobs:
   build:
     runs-on: windows-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-
       - name: Install dependencies
         run: python -m pip install -r requirements.txt
-
       - name: Build executable
         run: python -m PyInstaller --onefile --windowed --clean --name Sa-Display-Manager sa_display_manager.py
-
       - name: Verify executable
         shell: powershell
         run: |
-          if (!(Test-Path "dist\Sa-Display-Manager.exe")) {
-            throw "Executable was not created."
-          }
+          if (!(Test-Path "dist\Sa-Display-Manager.exe")) { throw "Executable was not created." }
           Get-Item "dist\Sa-Display-Manager.exe" | Select-Object FullName, Length
-
       - name: Upload executable
         uses: actions/upload-artifact@v4
         with:
