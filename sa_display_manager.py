@@ -1,5 +1,6 @@
 import re
 import shutil
+import sys
 from datetime import datetime
 from pathlib import Path
 import tkinter as tk
@@ -24,11 +25,21 @@ class DisplayManager(tk.Tk):
         super().__init__()
         self.title(APP_NAME)
         self.resizable(False, False)
-        self.geometry("620x520")
+        self.geometry("620x470")
         self.configure(bg="#eef3f8")
         self.option_add("*Font", ("Segoe UI", 10))
+        style = ttk.Style(self)
+        try:
+            style.theme_use("vista")
+        except tk.TclError:
+            pass
+        style.configure("Accent.TButton", font=("Segoe UI", 9, "bold"), padding=(14, 7))
+        style.configure("TButton", padding=(10, 5))
+        style.configure("TCheckbutton", background="#f7f9fb")
 
-        self.path_var = tk.StringVar(value="whiteboard.php")
+
+        self.php_path = self._get_php_path()
+        self.path_var = tk.StringVar(value=str(self.php_path))
         self.seconds_var = tk.StringVar(value=str(DEFAULT_SECONDS))
         self.status_var = tk.StringVar(value="Ready to configure the SA display.")
         self.vars = [tk.BooleanVar(value=i < 5) for i in range(len(URLS))]
@@ -63,9 +74,9 @@ class DisplayManager(tk.Tk):
                  font=("Segoe UI", 8, "bold")).pack(anchor="w", padx=15, pady=(10, 0))
         row = tk.Frame(target, bg="white")
         row.pack(fill="x", padx=15, pady=(3, 10))
-        tk.Label(row, text="\\network\\SA_Display\\whiteboard.php",
+        tk.Label(row, text="whiteboard.php  •  same folder as this EXE",
                  bg="white", fg="#123b5d", font=("Consolas", 10, "bold")).pack(side="left")
-        tk.Label(row, text="Fixed target", bg="#e8f1f8", fg="#285878",
+        tk.Label(row, text="FIXED TARGET", bg="#e8f1f8", fg="#285878",
                  font=("Segoe UI", 8, "bold"), padx=8, pady=3).pack(side="right")
 
         # Settings card
@@ -102,12 +113,19 @@ class DisplayManager(tk.Tk):
         controls.pack(fill="x", pady=(12, 0))
         ttk.Button(controls, text="Select All", command=self.select_all).pack(side="left")
         ttk.Button(controls, text="Clear All", command=self.clear_all).pack(side="left", padx=7)
-        ttk.Button(controls, text="UPDATE DISPLAY", command=self.update_php).pack(side="right")
+        ttk.Button(controls, text="UPDATE DISPLAY", style="Accent.TButton", command=self.update_php).pack(side="right")
 
         status = tk.Frame(body, bg="#eef3f8")
         status.pack(fill="x", pady=(10, 0))
         tk.Label(status, textvariable=self.status_var, bg="#eef3f8", fg="#5a6b7b",
                  anchor="w", font=("Segoe UI", 8)).pack(fill="x")
+
+    @staticmethod
+    def _get_php_path():
+        # In the compiled EXE, always use the folder containing the EXE.
+        # This preserves the original workflow: EXE and whiteboard.php live together.
+        base = Path(sys.executable).resolve().parent if getattr(sys, "frozen", False) else Path(__file__).resolve().parent
+        return base / "whiteboard.php"
 
     def select_all(self):
         for var in self.vars:
@@ -118,7 +136,7 @@ class DisplayManager(tk.Tk):
             var.set(False)
 
     def update_php(self):
-        php_path = Path(self.path_var.get())
+        php_path = self.php_path
         if not php_path.is_file():
             messagebox.showerror(APP_NAME, f"Could not find whiteboard.php at:\\n{php_path}")
             return
