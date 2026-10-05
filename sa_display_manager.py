@@ -182,7 +182,10 @@ class DisplayManager(tk.Tk):
     def update_php(self):
         php_path = self.php_path
         if not php_path.is_file():
-            messagebox.showerror(APP_NAME, f"Could not find whiteboard.php at:\n{php_path}")
+            messagebox.showerror(
+                APP_NAME,
+                f"Could not find whiteboard.php in the same folder as the EXE.\n\n{php_path}"
+            )
             return
 
         try:
@@ -190,6 +193,7 @@ class DisplayManager(tk.Tk):
         except ValueError:
             messagebox.showerror(APP_NAME, "Rotation interval must be a whole number.")
             return
+
         if seconds < 1:
             messagebox.showerror(APP_NAME, "Rotation interval must be at least 1 second.")
             return
@@ -199,34 +203,123 @@ class DisplayManager(tk.Tk):
             messagebox.showerror(APP_NAME, "Select at least one display page.")
             return
 
-        try:
-            original = php_path.read_text(encoding="utf-8")
-        except UnicodeDecodeError:
-            original = php_path.read_text(encoding="cp1252")
-        except OSError as exc:
-            messagebox.showerror(APP_NAME, f"Could not read whiteboard.php:\n{exc}")
-            return
-
-        updated = self._replace_urls(original, selected)
-        if updated is None:
-            messagebox.showerror(APP_NAME, "whiteboard.php does not match the expected SA display format.")
-            return
-        updated = self._replace_refresh_interval(updated, seconds)
+        # Recreate the entire PHP file from a known-good template rather than
+        # trying to modify whatever formatting happens to be in the existing file.
+        php = self._build_php(selected, seconds)
 
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         backup = php_path.with_name(f"whiteboard.php.bak_{timestamp}")
+
         try:
             shutil.copy2(php_path, backup)
-            php_path.write_text(updated, encoding="utf-8", newline="")
+            php_path.write_text(php, encoding="utf-8", newline="")
         except OSError as exc:
             messagebox.showerror(APP_NAME, f"Could not update whiteboard.php:\n{exc}")
             return
 
-        self.status_var.set(f"Updated whiteboard.php • {len(selected)} pages • {seconds}s rotation")
+        self.status_var.set(
+            f"Updated whiteboard.php • {len(selected)} pages • {seconds}s rotation"
+        )
         messagebox.showinfo(
             APP_NAME,
-            f"Display updated successfully.\n\nPages: {len(selected)}\nRotation: {seconds} seconds\n\nBackup created:\n{backup}"
+            f"Display updated successfully.\n\n"
+            f"Pages: {len(selected)}\n"
+            f"Rotation: {seconds} seconds\n\n"
+            f"Backup created:\n{backup}"
         )
+
+    @staticmethod
+    def _build_php(urls, seconds):
+        # This is the complete whiteboard.php template. The URL entries are
+        # deliberately joined with real newline characters so each assignment
+        # occupies its own physical line in the PHP file.
+        url_lines = "\n".join(
+            f'    $url[{i}] = "{url}";' for i, url in enumerate(urls)
+        )
+
+        return f'''<html>
+
+<head>
+
+    <?php
+
+    $url = array();
+
+{url_lines}
+
+
+    foreach (glob("/home/samba/html/SA_Display/*.png") as $filename) {{
+        $fileModTime = filemtime($filename);
+        $currentTime = time();
+        $secondsInDay = 86400;
+
+        if (($currentTime - $fileModTime) < $secondsInDay) {{
+             $url[] = "http://198.206.38.246/SA_Display/" . basename($filename);
+        }}
+    }}
+
+    if (isset($_GET['slide'])) {{
+        $slide = $_GET['slide'];
+    }} else {{
+        $slide = '0';
+    }}
+    if ($slide > count($url) - 1) {{
+        $slide = '0';
+    }}
+    ?>
+    <META HTTP-EQUIV="refresh"
+        CONTENT="{seconds};URL=http://198.206.38.246/SA_Display/whiteboard.php?slide=<?php echo $slide + 1; ?>">
+    <style type="text/css">
+        body {{
+            margin: 0;
+            height: 100%;
+            overflow: hidden;
+        }}
+
+        iframe {{
+            width: 100%;
+            height: 100%;
+            frameborder: 0;
+            scrolling: no;
+            -webkit-transform-origin: 0 0;
+        }}
+
+        img {{
+            height: 100%;
+            max-width: 100%;
+        }}
+    </style>
+</head>
+
+<body>
+
+    <?php
+    $img_extensions = array('jpg', 'png', 'gif');
+    if (in_array(substr($url[$slide], -3, strlen($url[$slide])), $img_extensions)) {{
+        echo '<center><img src="' . $url[$slide] . '?' . rand(1,1000000) . '"></img></center>';
+    }} else {{
+        echo '<iframe src="' . $url[$slide] . '?' . rand(1,1000000) . '"></iframe>';
+    }}
+
+    ?>
+
+    <script>
+        var loaded = false;
+        var time = 60000;
+        window.onload = function () {{
+            loaded = true;
+        }};
+        setTimeout(function () {{
+            if (!loaded) {{
+                window.location = "http://198.206.38.246/SA_Display/whiteboard.php?slide=<?php echo $slide + 1; ?>";
+            }}
+        }}, time);
+    </script>
+
+</body>
+
+</html>
+'''
 
     @staticmethod
     def _replace_urls(text, urls):
