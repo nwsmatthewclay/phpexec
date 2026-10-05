@@ -182,7 +182,7 @@ class DisplayManager(tk.Tk):
     def update_php(self):
         php_path = self.php_path
         if not php_path.is_file():
-            messagebox.showerror(APP_NAME, f"Could not find whiteboard.php at:\\n{php_path}")
+            messagebox.showerror(APP_NAME, f"Could not find whiteboard.php at:\n{php_path}")
             return
 
         try:
@@ -204,7 +204,7 @@ class DisplayManager(tk.Tk):
         except UnicodeDecodeError:
             original = php_path.read_text(encoding="cp1252")
         except OSError as exc:
-            messagebox.showerror(APP_NAME, f"Could not read whiteboard.php:\\n{exc}")
+            messagebox.showerror(APP_NAME, f"Could not read whiteboard.php:\n{exc}")
             return
 
         updated = self._replace_urls(original, selected)
@@ -219,13 +219,13 @@ class DisplayManager(tk.Tk):
             shutil.copy2(php_path, backup)
             php_path.write_text(updated, encoding="utf-8", newline="")
         except OSError as exc:
-            messagebox.showerror(APP_NAME, f"Could not update whiteboard.php:\\n{exc}")
+            messagebox.showerror(APP_NAME, f"Could not update whiteboard.php:\n{exc}")
             return
 
         self.status_var.set(f"Updated whiteboard.php • {len(selected)} pages • {seconds}s rotation")
         messagebox.showinfo(
             APP_NAME,
-            f"Display updated successfully.\\n\\nPages: {len(selected)}\\nRotation: {seconds} seconds\\n\\nBackup created:\\n{backup}"
+            f"Display updated successfully.\n\nPages: {len(selected)}\nRotation: {seconds} seconds\n\nBackup created:\n{backup}"
         )
 
     @staticmethod
@@ -240,10 +240,10 @@ class DisplayManager(tk.Tk):
         match = pattern.search(text, array_start)
         if not match:
             return None
-        entries = "\\n".join(
+        entries = "\n".join(
             f'    $url[{i}] = "{url}";' for i, url in enumerate(urls)
         )
-        replacement = match.group(1) + "\\n" + entries + "\\n"
+        replacement = match.group(1) + "\n" + entries + "\n"
         return text[:match.start()] + replacement + text[match.end():]
 
     @staticmethod
