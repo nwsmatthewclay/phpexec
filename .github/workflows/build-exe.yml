@@ -24,9 +24,17 @@ jobs:
         run: |
           if (!(Test-Path "dist\Sa-Display-Manager.exe")) { throw "Executable was not created." }
           Get-Item "dist\Sa-Display-Manager.exe" | Select-Object FullName, Length
-      - name: Upload executable
+      - name: Create ZIP and checksum
+        shell: powershell
+        run: |
+          Compress-Archive -Path "dist\Sa-Display-Manager.exe" -DestinationPath "dist\Sa-Display-Manager.zip" -Force
+          (Get-FileHash "dist\Sa-Display-Manager.exe" -Algorithm SHA256).Hash | Out-File "dist\Sa-Display-Manager.exe.sha256" -Encoding ascii
+
+      - name: Upload release package
         uses: actions/upload-artifact@v4
         with:
           name: Sa-Display-Manager
-          path: dist/Sa-Display-Manager.exe
+          path: |
+            dist/Sa-Display-Manager.zip
+            dist/Sa-Display-Manager.exe.sha256
           if-no-files-found: error
