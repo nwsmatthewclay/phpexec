@@ -24,78 +24,90 @@ class DisplayManager(tk.Tk):
         super().__init__()
         self.title(APP_NAME)
         self.resizable(False, False)
-        self.geometry("680x455")
-        self.minsize(680, 455)
-        self.configure(padx=18, pady=18)
+        self.geometry("620x520")
+        self.configure(bg="#eef3f8")
+        self.option_add("*Font", ("Segoe UI", 10))
 
-        self.path_var = tk.StringVar()
+        self.path_var = tk.StringVar(value="whiteboard.php")
         self.seconds_var = tk.StringVar(value=str(DEFAULT_SECONDS))
-        self.status_var = tk.StringVar(value="Select whiteboard.php, choose your pages, then click Update PHP.")
-        self.vars = []
+        self.status_var = tk.StringVar(value="Ready to configure the SA display.")
+        self.vars = [tk.BooleanVar(value=i < 5) for i in range(len(URLS))]
 
         self._build()
 
     def _build(self):
-        ttk.Label(self, text=APP_NAME, font=("Segoe UI", 18, "bold")).grid(
-            row=0, column=0, columnspan=3, sticky="w"
-        )
-        ttk.Label(
-            self,
-            text="Configure the SA display slideshow.",
-        ).grid(row=1, column=0, columnspan=3, sticky="w", pady=(2, 14))
+        self.configure(padx=0, pady=0)
 
-        ttk.Label(self, text="PHP file").grid(row=2, column=0, sticky="w")
-        ttk.Entry(self, textvariable=self.path_var, width=68).grid(
-            row=3, column=0, columnspan=2, sticky="ew", pady=(4, 10)
-        )
-        ttk.Button(self, text="Browse...", command=self.browse).grid(
-            row=3, column=2, padx=(8, 0), pady=(4, 10)
-        )
+        header = tk.Frame(self, bg="#123b5d", height=86)
+        header.pack(fill="x")
+        header.pack_propagate(False)
 
-        ttk.Label(self, text="Rotation interval (seconds)").grid(
-            row=4, column=0, sticky="w"
-        )
-        ttk.Spinbox(
-            self, from_=1, to=86400, textvariable=self.seconds_var, width=10
-        ).grid(row=5, column=0, sticky="w", pady=(4, 12))
+        tk.Label(
+            header, text="SA DISPLAY MANAGER",
+            bg="#123b5d", fg="white",
+            font=("Segoe UI", 19, "bold")
+        ).pack(anchor="w", padx=24, pady=(16, 0))
+        tk.Label(
+            header, text="Configure the Science & Aviation display rotation",
+            bg="#123b5d", fg="#cfe5f5",
+            font=("Segoe UI", 9)
+        ).pack(anchor="w", padx=25, pady=(2, 0))
 
-        ttk.Label(
-            self, text="Websites to display", font=("Segoe UI", 11, "bold")
-        ).grid(row=6, column=0, columnspan=3, sticky="w", pady=(2, 6))
+        body = tk.Frame(self, bg="#eef3f8")
+        body.pack(fill="both", expand=True, padx=18, pady=16)
 
-        for i, (name, url) in enumerate(URLS):
-            var = tk.BooleanVar(value=i < 5)
-            self.vars.append(var)
-            ttk.Checkbutton(self, text=name, variable=var).grid(
-                row=7 + i, column=0, columnspan=2, sticky="w", pady=2
+        # Fixed target card
+        target = tk.Frame(body, bg="white", highlightbackground="#d5dee8", highlightthickness=1)
+        target.pack(fill="x", pady=(0, 10))
+        tk.Label(target, text="DISPLAY FILE", bg="white", fg="#5a6b7b",
+                 font=("Segoe UI", 8, "bold")).pack(anchor="w", padx=15, pady=(10, 0))
+        row = tk.Frame(target, bg="white")
+        row.pack(fill="x", padx=15, pady=(3, 10))
+        tk.Label(row, text="\\network\\SA_Display\\whiteboard.php",
+                 bg="white", fg="#123b5d", font=("Consolas", 10, "bold")).pack(side="left")
+        tk.Label(row, text="Fixed target", bg="#e8f1f8", fg="#285878",
+                 font=("Segoe UI", 8, "bold"), padx=8, pady=3).pack(side="right")
+
+        # Settings card
+        settings = tk.Frame(body, bg="white", highlightbackground="#d5dee8", highlightthickness=1)
+        settings.pack(fill="x", pady=(0, 10))
+        tk.Label(settings, text="ROTATION", bg="white", fg="#5a6b7b",
+                 font=("Segoe UI", 8, "bold")).pack(anchor="w", padx=15, pady=(10, 0))
+        srow = tk.Frame(settings, bg="white")
+        srow.pack(fill="x", padx=15, pady=(4, 11))
+        tk.Label(srow, text="Change image every", bg="white", fg="#233746").pack(side="left")
+        spin = ttk.Spinbox(srow, from_=1, to=86400, textvariable=self.seconds_var,
+                           width=7, justify="center")
+        spin.pack(side="left", padx=8)
+        tk.Label(srow, text="seconds", bg="white", fg="#5a6b7b").pack(side="left")
+
+        # Pages card
+        pages = tk.Frame(body, bg="white", highlightbackground="#d5dee8", highlightthickness=1)
+        pages.pack(fill="x")
+        tk.Label(pages, text="DISPLAY PAGES", bg="white", fg="#5a6b7b",
+                 font=("Segoe UI", 8, "bold")).pack(anchor="w", padx=15, pady=(10, 5))
+
+        grid = tk.Frame(pages, bg="white")
+        grid.pack(fill="x", padx=12, pady=(0, 10))
+        for i, (name, _) in enumerate(URLS):
+            r, c = divmod(i, 2)
+            cell = tk.Frame(grid, bg="#f7f9fb", highlightbackground="#e0e7ee", highlightthickness=1)
+            cell.grid(row=r, column=c, sticky="ew", padx=3, pady=3, ipady=3)
+            grid.columnconfigure(c, weight=1)
+            ttk.Checkbutton(cell, text=name, variable=self.vars[i]).pack(
+                anchor="w", padx=7, pady=3
             )
-            ttk.Label(
-                self, text=url, foreground="#666666", font=("Segoe UI", 8)
-            ).grid(row=7 + i, column=1, sticky="w", padx=(95, 0), pady=2)
 
-        ttk.Button(self, text="Select All", command=self.select_all).grid(
-            row=13, column=0, sticky="w", pady=(12, 0)
-        )
-        ttk.Button(self, text="Clear All", command=self.clear_all).grid(
-            row=13, column=1, sticky="w", padx=(8, 0), pady=(12, 0)
-        )
-        ttk.Button(self, text="Update PHP", command=self.update_php).grid(
-            row=13, column=2, sticky="e", pady=(12, 0)
-        )
+        controls = tk.Frame(body, bg="#eef3f8")
+        controls.pack(fill="x", pady=(12, 0))
+        ttk.Button(controls, text="Select All", command=self.select_all).pack(side="left")
+        ttk.Button(controls, text="Clear All", command=self.clear_all).pack(side="left", padx=7)
+        ttk.Button(controls, text="UPDATE DISPLAY", command=self.update_php).pack(side="right")
 
-        ttk.Separator(self).grid(row=14, column=0, columnspan=3, sticky="ew", pady=14)
-        ttk.Label(self, textvariable=self.status_var, wraplength=630).grid(
-            row=15, column=0, columnspan=3, sticky="w"
-        )
-
-    def browse(self):
-        path = filedialog.askopenfilename(
-            title="Select whiteboard.php",
-            filetypes=[("PHP files", "*.php"), ("All files", "*.*")],
-        )
-        if path:
-            self.path_var.set(path)
-            self.status_var.set(f"Selected: {path}")
+        status = tk.Frame(body, bg="#eef3f8")
+        status.pack(fill="x", pady=(10, 0))
+        tk.Label(status, textvariable=self.status_var, bg="#eef3f8", fg="#5a6b7b",
+                 anchor="w", font=("Segoe UI", 8)).pack(fill="x")
 
     def select_all(self):
         for var in self.vars:
@@ -106,14 +118,9 @@ class DisplayManager(tk.Tk):
             var.set(False)
 
     def update_php(self):
-        path_text = self.path_var.get().strip()
-        if not path_text:
-            messagebox.showerror(APP_NAME, "Please select whiteboard.php first.")
-            return
-
-        php_path = Path(path_text)
+        php_path = Path(self.path_var.get())
         if not php_path.is_file():
-            messagebox.showerror(APP_NAME, f"File not found:\n{php_path}")
+            messagebox.showerror(APP_NAME, f"Could not find whiteboard.php at:\\n{php_path}")
             return
 
         try:
@@ -121,56 +128,42 @@ class DisplayManager(tk.Tk):
         except ValueError:
             messagebox.showerror(APP_NAME, "Rotation interval must be a whole number.")
             return
-
         if seconds < 1:
             messagebox.showerror(APP_NAME, "Rotation interval must be at least 1 second.")
             return
 
         selected = [url for (_, url), var in zip(URLS, self.vars) if var.get()]
         if not selected:
-            messagebox.showerror(APP_NAME, "Select at least one website.")
+            messagebox.showerror(APP_NAME, "Select at least one display page.")
             return
 
         try:
             original = php_path.read_text(encoding="utf-8")
         except UnicodeDecodeError:
-            try:
-                original = php_path.read_text(encoding="cp1252")
-            except Exception as exc:
-                messagebox.showerror(APP_NAME, f"Could not read PHP file:\n{exc}")
-                return
+            original = php_path.read_text(encoding="cp1252")
         except OSError as exc:
-            messagebox.showerror(APP_NAME, f"Could not read PHP file:\n{exc}")
+            messagebox.showerror(APP_NAME, f"Could not read whiteboard.php:\\n{exc}")
             return
 
         updated = self._replace_urls(original, selected)
         if updated is None:
-            messagebox.showerror(
-                APP_NAME,
-                "Could not locate the $url array in whiteboard.php. "
-                "The file does not match the expected SA display format.",
-            )
+            messagebox.showerror(APP_NAME, "whiteboard.php does not match the expected SA display format.")
             return
-
         updated = self._replace_refresh_interval(updated, seconds)
 
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        backup = php_path.with_name(f"{php_path.name}.bak_{timestamp}")
-
+        backup = php_path.with_name(f"whiteboard.php.bak_{timestamp}")
         try:
             shutil.copy2(php_path, backup)
             php_path.write_text(updated, encoding="utf-8", newline="")
         except OSError as exc:
-            messagebox.showerror(APP_NAME, f"Could not update PHP file:\n{exc}")
+            messagebox.showerror(APP_NAME, f"Could not update whiteboard.php:\\n{exc}")
             return
 
-        self.status_var.set(f"Updated successfully. Backup: {backup}")
+        self.status_var.set(f"Updated whiteboard.php • {len(selected)} pages • {seconds}s rotation")
         messagebox.showinfo(
             APP_NAME,
-            f"SA display updated successfully.\n\n"
-            f"Pages enabled: {len(selected)}\n"
-            f"Rotation: {seconds} seconds\n\n"
-            f"Backup created at:\n{backup}",
+            f"Display updated successfully.\\n\\nPages: {len(selected)}\\nRotation: {seconds} seconds\\n\\nBackup created:\\n{backup}"
         )
 
     @staticmethod
@@ -178,7 +171,6 @@ class DisplayManager(tk.Tk):
         array_start = text.find("$url = array();")
         if array_start == -1:
             return None
-
         pattern = re.compile(
             r"(?ms)(\$url\s*=\s*array\(\);\s*)"
             r"(?:\s*\$url\[\d+\]\s*=\s*.*?;)+"
@@ -186,11 +178,10 @@ class DisplayManager(tk.Tk):
         match = pattern.search(text, array_start)
         if not match:
             return None
-
-        entries = "\n".join(
+        entries = "\\n".join(
             f'    $url[{i}] = "{url}";' for i, url in enumerate(urls)
         )
-        replacement = match.group(1) + "\n" + entries + "\n"
+        replacement = match.group(1) + "\\n" + entries + "\\n"
         return text[:match.start()] + replacement + text[match.end():]
 
     @staticmethod
