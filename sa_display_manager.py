@@ -15,6 +15,7 @@ URLS = [
     ("Mountain", "https://nwsmatthewclay.github.io/NWS_SA_Dashboard/mountain.html"),
     ("Products", "https://nwsmatthewclay.github.io/NWS_SA_Dashboard/products.html"),
     ("Verification", "https://nwsmatthewclay.github.io/NWS_SA_Dashboard/verification.html"),
+    ("Aviation", "https://nwsmatthewclay.github.io/NWS_SA_Dashboard/aviation.html"),
 ]
 
 DEFAULT_SECONDS = 20
