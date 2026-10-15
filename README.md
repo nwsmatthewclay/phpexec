@@ -5,7 +5,7 @@ Windows utility for configuring the NWS SA display by editing the server's `whit
 ## Features
 - Choose the network/shared `whiteboard.php`.
 - Set the rotation interval in seconds.
-- Select any combination of six SA Dashboard pages.
+- Select any combination of seven SA Dashboard pages.
 - Automatically back up `whiteboard.php` before editing.
 - Preserve the rest of the PHP file.
 - Build a standalone Windows executable named `Sa-Display-Manager.exe`.
@@ -17,6 +17,7 @@ Windows utility for configuring the NWS SA display by editing the server's `whit
 4. Mountain
 5. Products
 6. Verification
+7. Aviation
 
 ## Build
 Run `build.bat` on Windows with Python installed.
